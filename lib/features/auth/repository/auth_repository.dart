@@ -15,16 +15,15 @@ import '../../../common/repositories/common_firebase_storage_repository.dart';
 import '../../../models/user_model.dart';
 
 final commonFirebaseStorageRepositoryProvider = Provider(
-      (ref) => CommonFirebaseStorageRepository(
+  (ref) => CommonFirebaseStorageRepository(
     firebaseStorage: FirebaseStorage.instance,
   ),
 );
 
-
 final authRepositoryProvider = Provider((ref) => AuthRepository(
     firestore: FirebaseFirestore.instance, auth: FirebaseAuth.instance));
 
- class AuthRepository {
+class AuthRepository {
   final FirebaseFirestore firestore;
   final FirebaseAuth auth;
 
@@ -33,10 +32,9 @@ final authRepositoryProvider = Provider((ref) => AuthRepository(
     required this.auth,
   });
 
-
   Future<UserModel?> getCurrentUserData() async {
     var userData =
-    await firestore.collection('users').doc(auth.currentUser?.uid).get();
+        await firestore.collection('users').doc(auth.currentUser?.uid).get();
 
     UserModel? user;
     if (userData.data() != null) {
@@ -44,7 +42,6 @@ final authRepositoryProvider = Provider((ref) => AuthRepository(
     }
     return user;
   }
-
 
   void signInWithPhone(
       {required BuildContext context, required String phoneNumber}) async {
@@ -67,22 +64,22 @@ final authRepositoryProvider = Provider((ref) => AuthRepository(
     }
   }
 
-  void verifyOtp({
-   required BuildContext context,
-    required String verificationId,
-    required String userOtp
- })async{
-try{
-PhoneAuthCredential credential = PhoneAuthProvider.credential(
-  verificationId:verificationId, smsCode: userOtp,
-);
-await auth.signInWithCredential(credential);
-Navigator.pushNamedAndRemoveUntil(context, UserInformationScreen.routeName, (route) => false);
-}on FirebaseException catch (e) {
-  showSnackBar(context: context, content: e.message!);
-}
+  void verifyOtp(
+      {required BuildContext context,
+      required String verificationId,
+      required String userOtp}) async {
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: userOtp,
+      );
+      await auth.signInWithCredential(credential);
+      Navigator.pushNamedAndRemoveUntil(
+          context, UserInformationScreen.routeName, (route) => false);
+    } on FirebaseException catch (e) {
+      showSnackBar(context: context, content: e.message!);
+    }
   }
-
 
   void saveUserDataToFirebase({
     required String name,
@@ -99,9 +96,9 @@ Navigator.pushNamedAndRemoveUntil(context, UserInformationScreen.routeName, (rou
         photoUrl = await ref
             .read(commonFirebaseStorageRepositoryProvider)
             .storeFileToFirebase(
-          'profilePic/$uid',
-          profilePic,
-        );
+              'profilePic/$uid',
+              profilePic,
+            );
       }
 
       var user = UserModel(
@@ -120,11 +117,24 @@ Navigator.pushNamedAndRemoveUntil(context, UserInformationScreen.routeName, (rou
         MaterialPageRoute(
           builder: (context) => const MobileScreenLayout(),
         ),
-            (route) => false,
+        (route) => false,
       );
     } catch (e) {
       showSnackBar(context: context, content: e.toString());
     }
+  }
+
+  Stream<UserModel> userData(String userId) {
+    return firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((event) => UserModel.fromMap(event.data()!));
+  }
+
+
+  void setUserState(bool isOnline)async{
+    await firestore.collection('users').doc(auth.currentUser!.uid).update({'isOnline':isOnline});
   }
 
 }
