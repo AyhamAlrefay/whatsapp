@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp/common/widgets/loader.dart';
 
-import '../../../colors.dart';
+import '../../../common/utils/colors.dart';
 import '../controller/chat_controller.dart';
-import '../../../info.dart';
 import '../screen/mobile_chat_screen.dart';
 
 class ContactsList extends ConsumerWidget {
@@ -54,7 +53,7 @@ class ContactsList extends ConsumerWidget {
                         ),
                         leading: CircleAvatar(
                           backgroundImage: NetworkImage(
-                            chatContactData.lastMessage,
+                            chatContactData.profilePic,
                           ),
                           radius: 30,
                         ),
@@ -62,7 +61,7 @@ class ContactsList extends ConsumerWidget {
                        DateFormat.Hm().format(chatContactData.timeSent),
                           style: const TextStyle(
                             color: Colors.grey,
-                            fontSize: 13,
+                            fontSize: 10,
                           ),
                         ),
                       ),

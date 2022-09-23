@@ -4,7 +4,7 @@ import 'package:whatsapp/common/widgets/loader.dart';
 import 'package:whatsapp/features/auth/controller/auth_controller.dart';
 import 'package:whatsapp/models/user_model.dart';
 
-import '../../../colors.dart';
+import '../../../common/utils/colors.dart';
 import '../widgets/chat_list.dart';
 import '../widgets/bottom_chat_field.dart';
 

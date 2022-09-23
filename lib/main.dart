@@ -1,9 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:whatsapp/colors.dart';
+import 'package:whatsapp/common/utils/colors.dart';
 import 'package:whatsapp/common/widgets/error_screen.dart';
 import 'package:whatsapp/common/widgets/loader.dart';
 import 'package:whatsapp/features/auth/controller/auth_controller.dart';

@@ -42,8 +42,10 @@ class SelectContactRepository {
         String selectedPhoneNum = selectedContact.phones[0].number.replaceAll(
           ' ',
           '',
-        );
-        if (selectedPhoneNum == userData.phoneNumber) {
+        ).replaceFirst(RegExp(r'0'), '+963',0);
+        print(selectedPhoneNum);
+
+        if (selectedPhoneNum == userData.phoneNumber ) {
           isFound = true;
           Navigator.pushNamed(
             context,

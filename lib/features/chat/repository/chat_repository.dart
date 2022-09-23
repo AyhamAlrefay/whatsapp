@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,6 +9,7 @@ import 'package:whatsapp/common/utils/utils.dart';
 import 'package:whatsapp/models/message.dart';
 
 import '../../../common/enums/message_enum.dart';
+import '../../../common/repositories/common_firebase_storage_repository.dart';
 import '../../../models/chat_contact.dart';
 import '../../../models/user_model.dart';
 
@@ -171,4 +174,130 @@ class ChatRepository {
       showSnackBar(context: context, content: e.toString());
     }
   }
+
+
+
+  void sendFileMessage({
+    required BuildContext context,
+    required File file,
+    required String receiverUserId,
+    required UserModel senderUserData,
+    required ProviderRef ref,
+    required MessageEnum messageEnum,
+   // required MessageReply? messageReply,
+    //required bool isGroupChat,
+  }) async {
+    try {
+      var timeSent = DateTime.now();
+      var messageId = const Uuid().v1();
+
+      String imageUrl = await ref
+          .read(commonFirebaseStorageRepositoryProvider)
+          .storeFileToFirebase(
+        'chat/${messageEnum.type}/${senderUserData.uid}/$receiverUserId/$messageId',
+        file,
+      );
+
+      UserModel? receiverUserData;
+      // if (!isGroupChat) {
+      //   var userDataMap =
+      //   await firestore.collection('users').doc(recieverUserId).get();
+      //   recieverUserData = UserModel.fromMap(userDataMap.data()!);
+      // }
+
+      String contactMsg;
+
+      switch (messageEnum) {
+        case MessageEnum.image:
+          contactMsg = '📷 Photo';
+          break;
+        case MessageEnum.video:
+          contactMsg = '📸 Video';
+          break;
+        case MessageEnum.audio:
+          contactMsg = '🎵 Audio';
+          break;
+        case MessageEnum.gif:
+          contactMsg = 'GIF';
+          break;
+        default:
+          contactMsg = 'GIF';
+      }
+      _saveDataToContactsSubCollection(
+        senderUserData,
+        receiverUserData,
+        contactMsg,
+        timeSent,
+        receiverUserId,
+ //       isGroupChat,
+      );
+
+      _saveMessageToMessageSubCollection(
+        receiverUserId: receiverUserId,
+        text: imageUrl,
+        timeSent: timeSent,
+        messageId: messageId,
+        userName: senderUserData.name,
+        messageType: messageEnum,
+       // messageReply: messageReply,
+        receiverUserName: receiverUserData?.name,
+       // senderUserName: senderUserData.name,
+       // isGroupChat: isGroupChat,
+      );
+    } catch (e) {
+      showSnackBar(context: context, content: e.toString());
+    }
+  }
+
+
+
+
+  void sendGIFMessage({
+    required BuildContext context,
+    required String gifUrl,
+    required String receiverUserId,
+    required UserModel senderUser,
+    // required MessageReply? messageReply,
+    // required bool isGroupChat,
+  }) async {
+    try {
+      var timeSent = DateTime.now();
+      UserModel? receiverUserData;
+
+      // if (!isGroupChat) {
+      //   var userDataMap =
+      //   await firestore.collection('users').doc(recieverUserId).get();
+      //   recieverUserData = UserModel.fromMap(userDataMap.data()!);
+      // }
+
+      var messageId = const Uuid().v1();
+
+      _saveDataToContactsSubCollection(
+        senderUser,
+        receiverUserData,
+        'GIF',
+        timeSent,
+        receiverUserId,
+        //isGroupChat,
+      );
+
+      _saveMessageToMessageSubCollection(
+        receiverUserId: receiverUserId,
+        text: gifUrl,
+        timeSent: timeSent,
+        messageType: MessageEnum.gif,
+        messageId: messageId,
+        userName: senderUser.name,
+        //messageReply: messageReply,
+        receiverUserName: receiverUserData?.name,
+        // senderUserName: senderUser.name,
+        // isGroupChat: isGroupChat,
+      );
+    } catch (e) {
+      showSnackBar(context: context, content: e.toString());
+    }
+  }
+
+
+
 }
