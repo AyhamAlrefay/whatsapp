@@ -1,9 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whatsapp/common/utils/colors.dart';
 import 'package:whatsapp/features/auth/controller/auth_controller.dart';
 import 'package:whatsapp/features/select_contacts/screens/select_contact.dart';
 import 'package:whatsapp/features/chat/widgets/contacts_list.dart';
+import 'package:whatsapp/features/status/screens/status_contacts_screen.dart';
+
+import '../common/utils/utils.dart';
+import '../features/group/screens/create_group_screen.dart';
+import '../features/status/screens/confirm_status_screen.dart';
 
 class MobileScreenLayout extends ConsumerStatefulWidget {
   const MobileScreenLayout({Key? key}) : super(key: key);
@@ -12,34 +19,36 @@ class MobileScreenLayout extends ConsumerStatefulWidget {
   ConsumerState<MobileScreenLayout> createState() => _MobileScreenLayoutState();
 }
 
-class _MobileScreenLayoutState extends ConsumerState<MobileScreenLayout> with WidgetsBindingObserver {
+class _MobileScreenLayoutState extends ConsumerState<MobileScreenLayout>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
+  late TabController tabController;
 
   @override
   void initState() {
+    tabController = TabController(length: 3, vsync: this);
     super.initState();
-  WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     super.dispose();
-  WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
   }
-
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // TODO: implement didChangeAppLifecycleState
     super.didChangeAppLifecycleState(state);
-    switch(state){
+    switch (state) {
       case AppLifecycleState.resumed:
         ref.read(authControllerProvider).setUserState(true);
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:
       case AppLifecycleState.paused:
-      ref.read(authControllerProvider).setUserState(false);
-      break;
+        ref.read(authControllerProvider).setUserState(false);
+        break;
     }
   }
 
@@ -61,25 +70,35 @@ class _MobileScreenLayoutState extends ConsumerState<MobileScreenLayout> with Wi
           centerTitle: false,
           actions: [
             IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.search,
-                  color: Colors.grey,
-                )),
-            IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.more_vert,
-                  color: Colors.grey,
-                )),
+              icon: const Icon(Icons.search, color: Colors.grey),
+              onPressed: () {},
+            ),
+            PopupMenuButton(
+              icon: const Icon(
+                Icons.more_vert,
+                color: Colors.grey,
+              ),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  child: const Text(
+                    'Create Group',
+                  ),
+                  onTap: () => Future(
+                        () => Navigator.pushNamed(
+                        context, CreateGroupScreen.routeName),
+                  ),
+                )
+              ],
+            ),
           ],
-          bottom: const TabBar(
+          bottom:  TabBar(
+            controller: tabController,
               indicatorColor: tabColor,
               labelColor: tabColor,
               indicatorWeight: 4,
               unselectedLabelColor: Colors.grey,
-              labelStyle: TextStyle(fontWeight: FontWeight.bold),
-              tabs: [
+              labelStyle:const TextStyle(fontWeight: FontWeight.bold),
+              tabs:const [
                 Tab(
                   text: 'CHATS',
                 ),
@@ -91,15 +110,35 @@ class _MobileScreenLayoutState extends ConsumerState<MobileScreenLayout> with Wi
                 ),
               ]),
         ),
-        body:const ContactsList(),
-        floatingActionButton:FloatingActionButton(
-            backgroundColor: tabColor,
-          onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const SelectContactsScreen()));
-
+        body: TabBarView(
+          controller: tabController,
+          children: const [
+            ContactsList(),
+            StatusContactsScreen(),
+            Text('call')
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            if (tabController.index == 0) {
+              Navigator.pushNamed(context, SelectContactsScreen.routeName);
+            } else {
+              File? pickedImage = await pickerImageFromGallery(context);
+              if (pickedImage != null) {
+                Navigator.pushNamed(
+                  context,
+                  ConfirmStatusScreen.routeName,
+                  arguments: pickedImage,
+                );
+              }
+            }
           },
-          child:const Icon(Icons.comment),
-        ) ,
+          backgroundColor: tabColor,
+          child: const Icon(
+            Icons.comment,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }

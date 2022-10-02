@@ -7,15 +7,17 @@ import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:whatsapp/features/chat/controller/chat_controller.dart';
+import 'package:whatsapp/features/chat/widgets/message_reply_preview.dart';
 
+import '../../../common/providers/message_reply_provider.dart';
 import '../../../common/utils/colors.dart';
 import '../../../common/enums/message_enum.dart';
 import '../../../common/utils/utils.dart';
 
 class BottomChatField extends ConsumerStatefulWidget {
   final String receiverUserId;
-
-  const BottomChatField({Key? key, required this.receiverUserId})
+  final bool isGroupChat;
+  const BottomChatField({Key? key, required this.receiverUserId,required this.isGroupChat})
       : super(key: key);
 
   @override
@@ -88,7 +90,7 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
           file,
           widget.receiverUserId,
           messageEnum,
-          //widget.isGroupChat,
+          widget.isGroupChat,
         );
   }
 
@@ -106,17 +108,6 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
     }
   }
 
-  // void selectGIF() async {
-  //   final gif = await pickGIF(context);
-  //   if (gif != null) {
-  //     ref.read(chatControllerProvider).sendGIFMessage(
-  //       context:context,
-  //       gifUrl:gif.url,
-  //       receiverUserId:widget.receiverUserId,
-  //       //widget.isGroupChat,
-  //     );
-  //   }
-  // }
 
   void hideEmojiContainer() {
     setState(() {
@@ -148,14 +139,17 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
   void dispose() {
     super.dispose();
     _messageController.dispose();
-   // _soundRecorder!.closeRecorder();
+   _soundRecorder!.closeRecorder();
     isRecorderInit = false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final messageReply = ref.watch(messageReplyProvider);
+    final isShowMessageReply = messageReply != null;
     return Column(
       children: [
+        isShowMessageReply ? const MessageReplyPreview() : const SizedBox(),
         Row(
           children: [
             Expanded(
@@ -189,13 +183,13 @@ class _BottomChatFieldState extends ConsumerState<BottomChatField> {
                               color: Colors.grey,
                             ),
                           ),
-                          IconButton(
-                            onPressed:(){} ,//selectGIF,
-                            icon: const Icon(
-                              Icons.gif,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          // IconButton(
+                          //   onPressed:(){} ,//selectGIF,
+                          //   icon: const Icon(
+                          //     Icons.gif,
+                          //     color: Colors.grey,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),

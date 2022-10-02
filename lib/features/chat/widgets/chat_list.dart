@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:whatsapp/common/enums/message_enum.dart';
+import 'package:whatsapp/common/providers/message_reply_provider.dart';
 import 'package:whatsapp/features/chat/controller/chat_controller.dart';
 import 'package:whatsapp/models/message.dart';
 import 'package:whatsapp/features/chat/widgets/sender_message_card.dart';
@@ -12,8 +14,8 @@ import 'my_message_card.dart';
 
 class ChatList extends ConsumerStatefulWidget {
   final String receiverUserId;
-
-  const ChatList({required this.receiverUserId, Key? key}) : super(key: key);
+  final bool isGroupChat;
+  const ChatList({required this.receiverUserId,required this.isGroupChat, Key? key}) : super(key: key);
 
   @override
   ConsumerState<ChatList> createState() => _ChatListState();
@@ -26,6 +28,20 @@ class _ChatListState extends ConsumerState<ChatList> {
   void dispose() {
     super.dispose();
     messageController.dispose();
+  }
+
+  void onMessageSwipe(
+    String message,
+    bool isMe,
+    MessageEnum messageEnum,
+  ) {
+    ref.read(messageReplyProvider.state).update(
+          (state) => MessageReply(
+            message,
+            isMe,
+            messageEnum,
+          ),
+        );
   }
 
   @override
@@ -47,18 +63,38 @@ class _ChatListState extends ConsumerState<ChatList> {
             itemBuilder: (context, index) {
               var messageData = snapshot.data![index];
               var timeSent = DateFormat.Hm().format(messageData.timeSent);
+
+              if (!messageData.isSeen &&
+                  messageData.receiverId ==
+                      FirebaseAuth.instance.currentUser!.uid) {
+                ref.read(chatControllerProvider).setChatMessageSeen(
+                  context,
+                  widget.receiverUserId,
+                  messageData.messageId,
+                );
+              }
+
               if (messageData.senderId ==
                   FirebaseAuth.instance.currentUser!.uid) {
                 return MyMessageCard(
                   message: messageData.text,
                   date: timeSent,
                   type: messageData.type,
+                  isSeen: messageData.isSeen,
+                  onLeftSwipe:()=> onMessageSwipe(messageData.text,true,messageData.type ),
+                  repliedText: messageData.repliedMessage,
+                  username: messageData.repliedTo,
+                  repliedMessageType: messageData.repliedMessageType,
                 );
               }
               return SenderMessageCard(
                 message: messageData.text,
                 date: timeSent,
                 type: messageData.type,
+                onRightSwipe:()=> onMessageSwipe(messageData.text,false,messageData.type ),
+                repliedText: messageData.repliedMessage,
+                username: messageData.repliedTo,
+                repliedMessageType: messageData.repliedMessageType,
               );
             },
           );
